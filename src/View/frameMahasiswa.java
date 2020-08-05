@@ -7,6 +7,10 @@ package View;
 
 import DAO.Koneksi;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -22,6 +26,7 @@ public class frameMahasiswa extends javax.swing.JFrame {
     String a,b,c,d,e,f,g,h,i,j,l;
     DefaultTableModel tb;
     Koneksi k = new Koneksi();
+    String tgl;
     
     public frameMahasiswa() {
         initComponents();
@@ -45,10 +50,21 @@ public class frameMahasiswa extends javax.swing.JFrame {
             String [] data = {a,b,c,d,e};
             tb.addRow(data);
         }
+        k.st.close();
+        k.con.close();
     } catch (SQLException ex) {
         System.out.println("error di showdata"+ex);
     }
 }
+    
+    private void clear(){
+        txt_nim.setText("");
+        txt_nama.setText("");
+        txt_alamat.setText("");
+        txt_ttl.setText("");
+        tgl_lahir.setDate(null);
+        //jt_mahasiswa.clearSelection();
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -82,7 +98,7 @@ public class frameMahasiswa extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         jt_mahasiswa = new javax.swing.JTable();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jPanel1.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 2, true));
 
@@ -160,6 +176,11 @@ public class frameMahasiswa extends javax.swing.JFrame {
 
         tgl_lahir.setDateFormatString("dd - MM - YYYY");
         tgl_lahir.setFont(new java.awt.Font("Century Gothic", 0, 12)); // NOI18N
+        tgl_lahir.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                tgl_lahirPropertyChange(evt);
+            }
+        });
 
         jLabel13.setFont(new java.awt.Font("Century Gothic", 0, 12)); // NOI18N
         jLabel13.setText("Alamat");
@@ -220,6 +241,11 @@ public class frameMahasiswa extends javax.swing.JFrame {
 
         btn_clear.setFont(new java.awt.Font("Century Gothic", 0, 14)); // NOI18N
         btn_clear.setText("Bersihkan");
+        btn_clear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_clearActionPerformed(evt);
+            }
+        });
 
         btn_save.setFont(new java.awt.Font("Century Gothic", 0, 14)); // NOI18N
         btn_save.setText("Simpan");
@@ -231,6 +257,11 @@ public class frameMahasiswa extends javax.swing.JFrame {
 
         btn_hapus.setFont(new java.awt.Font("Century Gothic", 0, 14)); // NOI18N
         btn_hapus.setText("Hapus");
+        btn_hapus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_hapusActionPerformed(evt);
+            }
+        });
 
         btn_showdata.setFont(new java.awt.Font("Century Gothic", 0, 14)); // NOI18N
         btn_showdata.setText("Tampilkan Data");
@@ -328,25 +359,28 @@ public class frameMahasiswa extends javax.swing.JFrame {
 
     private void jt_mahasiswaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jt_mahasiswaMouseClicked
         // TODO add your handling code here:
-//        try {
-//            // TODO add your handling code here:
-//            clear();
-//            int row = jt_mahasiswa.getSelectedRow();
-//            String klik = (jt_mahasiswa.getModel().getValueAt(row, 0).toString());
-//            k.query="select *from t_nilai inner join t_mahasiswa on t_nilai.nim=t_mahasiswa.nim where t_nilai.nim='"+klik+"'";
-//            k.ambil();
-//            if(k.rs.next()){
-//                txt_nim1.setText(k.rs.getString("nim"));
-//                txt_nama1.setText(k.rs.getString("nama"));
-//                txt_nilai.setText(k.rs.getString("nilai"));
-//                txt_indeks.setText(k.rs.getString("index"));
-//            }
-//            else{
-//
-//            }
-//        } catch (SQLException ex) {
-//            Logger.getLogger(frameTugas1.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+        try {
+            // TODO add your handling code here:
+            clear();
+            int row = jt_mahasiswa.getSelectedRow();
+            String klik = (jt_mahasiswa.getModel().getValueAt(row, 0).toString());
+            k.query="select *from t_mahasiswa where nim='"+klik+"'";
+            k.ambil();
+            if(k.rs.next()){
+                txt_nim.setText(k.rs.getString("nim"));
+                txt_nama.setText(k.rs.getString("nama"));
+                txt_ttl.setText(k.rs.getString("ttl"));
+                Date f = k.rs.getDate("tgl_lahir");
+                tgl_lahir.setDate(f);
+                txt_alamat.setText(k.rs.getString("alamat"));
+            }
+            else{
+
+            }
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(frameMahasiswa.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_jt_mahasiswaMouseClicked
 
     private void btn_showdataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_showdataActionPerformed
@@ -356,21 +390,60 @@ public class frameMahasiswa extends javax.swing.JFrame {
 
     private void btn_saveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_saveActionPerformed
         // TODO add your handling code here:
-        try{
-            
-            k.query="insert into t_mahasiswa values('"+txt_nim.getText()+"','"+txt_nama.getText()+"','"+txt_ttl.getText()+"','"+txt_alamat.getText()+"')";
-            k.crud();
-            if(k.rs.next())
-            {
-                JOptionPane.showMessageDialog(null,"Data Gagal Disimpan","Info",JOptionPane.INFORMATION_MESSAGE);
-            }else{
-                JOptionPane.showMessageDialog(null,"Data Berhasil Tersimpan","Info",JOptionPane.INFORMATION_MESSAGE);
-            }
-            
-        }catch(Exception ex){
-            System.out.println("error di simpan "+ex);
+        if(txt_nama.getText().equals("")||txt_nim.getText().equals("")||
+                txt_ttl.getText().equals("")||txt_alamat.getText().equals("")){
+            JOptionPane.showMessageDialog(null,"Harap Lengkapi Data!","Info",JOptionPane.ERROR_MESSAGE);
         }
+        else{
+            try{
+                k.query="insert into t_mahasiswa values('"+txt_nim.getText()+"','"
+                        +txt_nama.getText()+"','"+txt_ttl.getText()+"','"+tgl+"','"+txt_alamat.getText()+"')";
+                k.crud();
+                JOptionPane.showMessageDialog(null,"Data Berhasil Tersimpan","Info",JOptionPane.INFORMATION_MESSAGE);
+                k.st.close();
+                k.con.close();
+                
+            }catch(Exception ex){
+                System.out.println("error di simpan "+ex);
+            }
+            clear();
+            showdata();
+        }
+        
     }//GEN-LAST:event_btn_saveActionPerformed
+
+    private void tgl_lahirPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_tgl_lahirPropertyChange
+        // TODO add your handling code here:
+        if(tgl_lahir.getDate()!=null){
+            SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd");
+            tgl = s.format(tgl_lahir.getDate());
+        }
+    }//GEN-LAST:event_tgl_lahirPropertyChange
+
+    private void btn_clearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_clearActionPerformed
+        // TODO add your handling code here:
+        clear();
+        jt_mahasiswa.clearSelection();
+    }//GEN-LAST:event_btn_clearActionPerformed
+
+    private void btn_hapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_hapusActionPerformed
+        // TODO add your handling code here:
+        int a = JOptionPane.showConfirmDialog(null, "Yakin Mau Dihapus? NIM : '"+txt_nim.getText()+"' ","Info",JOptionPane.YES_NO_OPTION);
+        
+        if(a== JOptionPane.YES_OPTION){
+            try{
+                k.query="Delete from t_mahasiswa where nim='"+txt_nim.getText()+"'";
+                k.crud();
+                JOptionPane.showMessageDialog(null,"Data Berhasil Dihapus","Info",JOptionPane.INFORMATION_MESSAGE);
+                k.st.close();
+                k.con.close();
+            }catch(Exception ex){
+                System.out.println("error di hapus "+ex);
+            }
+            showdata();
+            clear();
+        }
+    }//GEN-LAST:event_btn_hapusActionPerformed
 
     /**
      * @param args the command line arguments
